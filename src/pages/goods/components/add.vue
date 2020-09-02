@@ -265,7 +265,7 @@ export default {
       this.reqCateList();
     }
     if (this.specList.length == 0) {
-      this.reqSpecList();
+      this.reqSpecList(true);
     }
   },
 };

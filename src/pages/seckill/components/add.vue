@@ -7,29 +7,45 @@
         </el-form-item>
         <el-form-item label="活动期限" :label-width="width">
           <el-date-picker
-            v-model="value"
-            type="datetimerange"
+            v-model="timeValue"
+            type="daterange"
+            range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            :default-time="['00:00:00']"
+            value-format="timestamp"
           ></el-date-picker>
         </el-form-item>
-        <el-form-item label="一级分类" :label-width="width" >
+        <el-form-item label="一级分类" :label-width="width">
           <el-select v-model="form.first_cateid" placeholder="请选择" @change="changeFirstId">
             <!-- 少一个动态的数据 -->
-            <el-option v-for="item in cateList" :key="item.id" :label="item.catename" :value="item.id"></el-option>
+            <el-option
+              v-for="item in cateList"
+              :key="item.id"
+              :label="item.catename"
+              :value="item.id"
+            ></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="二级分类" :label-width="width">
           <el-select v-model="form.second_cateid" placeholder="请选择" @change="changeSecondId">
             <!-- 少一个动态的数据 -->
-            <el-option v-for="item in secondCateList" :key="item.id" :label="item.catename" :value="item.id"></el-option>
+            <el-option
+              v-for="item in secondCateList"
+              :key="item.id"
+              :label="item.catename"
+              :value="item.id"
+            ></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="商品" :label-width="width">
           <el-select v-model="form.goodsid" placeholder="请选择">
             <!-- 少一个动态的数据 -->
-            <el-option v-for="item in threeList" :key="item.id" :label="item.goodsname" :value="item.id"></el-option>
+            <el-option
+              v-for="item in threeList"
+              :key="item.id"
+              :label="item.goodsname"
+              :value="item.id"
+            ></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="状态" :label-width="width">
@@ -46,8 +62,8 @@
 </template>
 <script>
 import {
-  reqspecsAdd,
-  reqspecsDetail,
+  reqseckAdd,
+  reqseckDetail,
   reqspecsUpdate,
 } from "../../../util/request";
 import { successAlert, warningAlert } from "../../../util/alert";
@@ -62,10 +78,10 @@ export default {
   },
   data() {
     return {
-      value: "",
+      timeValue: [],
       //二级分类的列表
       secondCateList: [],
-       //商品分类的列表
+      //商品分类的列表
       threeList: [],
       //label占的宽度
       width: "100px",
@@ -85,8 +101,9 @@ export default {
     ...mapActions({
       reqList: "cate/reqListAction",
       reqGoodsList: "goods/reqListAction",
+      reqseckList: "seck/reqListAction",
     }),
-     //修改了一级分类
+    //修改了一级分类
     changeFirstId() {
       //找到当前first_cateid对应的那条数据的children，赋值给secondCateList,遍历
       this.secondCateList = this.cateList.find(
@@ -95,74 +112,83 @@ export default {
       //因为更换了一级分类，二级分类重置
       this.form.second_cateid = "";
     },
-    changeSecondId(){
-      //找到当前first_cateid对应的那条数据的children，赋值给secondCateList,遍历
-      // this.threeList = this.goodsList.find(
-      //   (item) => item.second_cateid == this.form.second_cateid
-      // ).goodsname;
-      // console.log(this.threeList);
-      for(let i=0;i<this.goodsList.length;i++){
-        if(this.goodsList[i].second_cateid == this.form.second_cateid){
-          // this.threeList.push({title:this.goodsList[i].goodsname})
-          this.threeList.push(this.goodsList[i])
+    changeSecondId() {
+      this.threeList = [];
+      for (let i = 0; i < this.goodsList.length; i++) {
+        if (this.goodsList[i].second_cateid == this.form.second_cateid) {
+          this.threeList.push(this.goodsList[i]);
         }
+        //因为更换了二级分类，商品重置
+        this.form.goodsid = "";
       }
     },
     //重置form数据
     empty() {
-      this.form = { 
-        specsname: "",
-        attrs: "",
+      this.timeValue = [];
+      //二级分类的列表
+      this.secondCateList = [];
+      //商品分类的列表
+      this.threeList = [];
+      this.form = {
+        title: "",
+        begintime: "",
+        endtime: "",
+        first_cateid: null,
+        second_cateid: null,
+        goodsid: "",
         status: 1,
       };
-      this.attrArr = [
-        {
-          value: "",
-        },
-      ];
     },
-    addAttr() {
-      this.attrArr.push({
-        value: "",
-      });
-    },
+
     del() {},
     add() {
-      console.log(this.form.first_cateid);
-      // this.form.attrs = JSON.stringify(this.attrArr.map((item) => item.value));
-      // reqspecsAdd(this.form).then((res) => {
-      //   if (res.data.code == 200) {
-      //     //添加成功
-      //     successAlert(res.data.msg);
-      //     //弹框消失
-      //     this.$emit("hide");
-      //     //数据重置
-      //     this.empty();
-      //     //重新获取list
-      //     this.reqList();
-      //   } else {
-      //     warningAlert(res.data.msg);
-      //   }
-      // });
+      this.form.begintime = this.timeValue[0];
+      this.form.endtime = this.timeValue[1];
+      reqseckAdd(this.form).then((res) => {
+        if (res.data.code == 200) {
+          //添加成功
+          successAlert(res.data.msg);
+          //弹框消失
+          this.$emit("hide");
+          //数据重置
+          this.empty();
+          //重新获取list
+          this.reqseckList();
+        } else {
+          warningAlert(res.data.msg);
+        }
+      });
     },
     //查看一条数据
     look(id) {
-      reqspecsDetail({ id: id }).then((res) => {
-        this.form = res.data.list[0];
-        this.attrArr = JSON.parse(this.form.attrs).map((item) => ({
-          value: item,
-        }));
+      reqseckDetail({ id: id }).then((res) => {
+        this.form = res.data.list;
+        this.form.id = id;
+        this.timeValue = [];
+        this.timeValue[0] = this.form.begintime;
+        this.timeValue[1] = this.form.endtime;
+        //计算二级分类的列表
+        this.secondCateList = this.cateList.find(
+          (item) => item.id == this.form.first_cateid
+        ).children;
+        //计算商品列表
+        for (let i = 0; i < this.goodsList.length; i++) {
+          if (this.goodsList[i].second_cateid == this.form.second_cateid) {
+            this.threeList.push(this.goodsList[i]);
+          }
+        }
       });
     },
     //点击了修改
     update() {
-      this.form.attrs = JSON.stringify(this.attrArr.map((item) => item.value));
+      this.form.begintime = this.timeValue[0];
+      this.form.endtime = this.timeValue[1];
       reqspecsUpdate(this.form).then((res) => {
         if (res.data.code == 200) {
           successAlert("更新成功");
           this.$emit("hide");
           this.empty();
-          this.reqList();
+          this.reqseckList();
         } else {
           warningAlert(res.data.msg);
         }
@@ -176,7 +202,6 @@ export default {
     //一进来 走请求
     this.reqList();
     this.reqGoodsList(true);
-    console.log(this.list);
   },
 };
 </script>

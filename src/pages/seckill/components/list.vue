@@ -8,7 +8,7 @@
       default-expand-all
       :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
     >
-      <el-table-column prop="specsname" label="活动名称" sortable width="180"></el-table-column>
+      <el-table-column prop="title" label="活动名称" sortable width="180"></el-table-column>
       <el-table-column label="状态">
         <template slot-scope="scope">
           <el-button type="primary" v-if="scope.row.status==1">启用</el-button>
@@ -27,21 +27,22 @@
 
 <script>
 import { mapGetters, mapActions } from "vuex";
-import { reqspecsDel } from "../../../util/request";
+import { reqseckDel } from "../../../util/request";
 import { successAlert, warningAlert } from "../../../util/alert";
 export default {
   components: {},
   computed: {
     ...mapGetters({
-      list: "spec/list",
+      list: "seck/list",
     }),
   },
   data() {
-    return {};
+    return {
+    };
   },
   methods: {
     ...mapActions({
-      reqList: "spec/reqListAction",
+      reqList: "seck/reqListAction",
     }),
     //点击了编辑按钮
     edit(id) {
@@ -50,7 +51,7 @@ export default {
     //删除
     del(id) {
       //点击了确定，发起删除请求
-      reqspecsDel({ id: id }).then((res) => {
+      reqseckDel({ id: id }).then((res) => {
         if (res.data.code == 200) {
           successAlert("删除成功");
           this.reqList();
