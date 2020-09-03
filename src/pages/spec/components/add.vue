@@ -1,8 +1,13 @@
 <template>
   <div>
-    <el-dialog :title="info.title" :visible.sync="info.dialogVisible" width="60%" @closed="close"> 
-      <el-form :model="form">
-        <el-form-item label="规格名称" :label-width="width">
+    <el-dialog
+      :title="info.title"
+      :visible.sync="info.dialogVisible"
+      width="60%"
+      @closed="close('form')"
+    >
+      <el-form :model="form" :rules="rules" ref="form" status-icon>
+        <el-form-item label="规格名称" :label-width="width" prop="specsname">
           <el-input v-model="form.specsname" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item
@@ -27,8 +32,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="info.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添 加</el-button>
-        <el-button type="primary" @click="update" v-else>修 改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添 加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修 改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -50,6 +55,12 @@ export default {
   },
   data() {
     return {
+      rules: {
+        specsname: [
+          { required: true, message: "请输入规格名称", trigger: "blur" },
+        { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }
+        ],
+      },
       attrArr: [
         {
           value: "",
@@ -68,7 +79,7 @@ export default {
   methods: {
     ...mapActions({
       reqList: "spec/reqListAction",
-       reqTotal:"spec/reqListNum",
+      reqTotal: "spec/reqListNum",
     }),
     //重置form数据
     empty() {
@@ -89,21 +100,29 @@ export default {
       });
     },
     del() {},
-    add() {
-      this.form.attrs = JSON.stringify(this.attrArr.map((item) => item.value));
-      reqspecsAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          //添加成功
-          successAlert(res.data.msg);
-          //弹框消失
-          this.$emit("hide");
-          //数据重置
-          this.empty();
-          //重新获取list
-          this.reqList();
-          this.reqTotal();
+    add(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          this.form.attrs = JSON.stringify(
+            this.attrArr.map((item) => item.value)
+          );
+          reqspecsAdd(this.form).then((res) => {
+            if (res.data.code == 200) {
+              //添加成功
+              successAlert(res.data.msg);
+              //弹框消失
+              this.$emit("hide");
+              //数据重置
+              this.empty();
+              //重新获取list
+              this.reqList();
+              this.reqTotal();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
@@ -117,22 +136,31 @@ export default {
       });
     },
     //点击了修改
-    update() {
-      this.form.attrs = JSON.stringify(this.attrArr.map((item) => item.value));
-      reqspecsUpdate(this.form).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("更新成功");
-          this.$emit("hide");
-          this.empty();
-          this.reqList();
+    update(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          this.form.attrs = JSON.stringify(
+            this.attrArr.map((item) => item.value)
+          );
+          reqspecsUpdate(this.form).then((res) => {
+            if (res.data.code == 200) {
+              successAlert("更新成功");
+              this.$emit("hide");
+              this.empty();
+              this.reqList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
-    close(){
-       this.empty();
-    }
+    close(form) {
+      this.empty();
+      this.$refs[form].resetFields();
+    },
   },
 };
 </script>

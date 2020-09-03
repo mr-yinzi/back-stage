@@ -2,7 +2,7 @@
   <div class="login">
     <div class="con">
       <h3>登录</h3>
-      <el-form :model="user" :rules="rules">
+      <el-form :model="user" :rules="rules" ref="user" status-icon>
         <el-form-item prop="username">
           <el-input v-model="user.username" placeholder="输入账号" clearable></el-input>
         </el-form-item>
@@ -12,7 +12,7 @@
       </el-form>
 
       <div class="btn-box">
-        <el-button type="primary" @click="login">登录</el-button>
+        <el-button type="primary" @click="login('user')">登录</el-button>
       </div>
     </div>
   </div>
@@ -48,21 +48,25 @@ export default {
     ...mapActions({
       changeInfoAction: "user/changeInfoAction",
     }),
-    login() {
-      //登录请求
-      reqUserLogin(this.user).then((res) => {
-        if (res.data.code == 200) {
-          //登录成功
-          //弹成功
-          successAlert("登录成功");
-
-          //将用户信息保存 vuex
-          this.changeInfoAction(res.data.list);
-
-          //跳转
-          this.$router.push("/");
+    login(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          //登录请求
+          reqUserLogin(this.user).then((res) => {
+            if (res.data.code == 200) {
+              //登录成功
+              //弹成功
+              successAlert("登录成功");
+              //将用户信息保存 vuex
+              this.changeInfoAction(res.data.list);
+              //跳转
+              this.$router.push("/");
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },

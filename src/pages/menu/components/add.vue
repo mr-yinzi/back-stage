@@ -1,11 +1,16 @@
 <template>
   <div>
-    <el-dialog :title="info.title" :visible.sync="info.dialogVisible" width="60%" @closed="close">
-      <el-form :model="form">
-        <el-form-item label="菜单名称" :label-width="width">
+    <el-dialog
+      :title="info.title"
+      :visible.sync="info.dialogVisible"
+      width="60%"
+      @closed="close('form')"
+    >
+      <el-form :model="form" :rules="rules" ref="form" status-icon>
+        <el-form-item label="菜单名称" :label-width="width" prop="title">
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="上级菜单" :label-width="width">
+        <el-form-item label="上级菜单" :label-width="width" prop="pid">
           <el-select v-model="form.pid" placeholder="请选择活动区域" @change="changePid">
             <el-option label="顶级菜单" :value="0"></el-option>
             <!-- 少一个动态的数据 -->
@@ -49,8 +54,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="info.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添 加</el-button>
-        <el-button type="primary" @click="update" v-else>修 改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添 加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修 改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -62,7 +67,7 @@ import {
   reqAddMenu,
   reqMenuDetail,
   reqMenuUpdate,
-  reqMenuList
+  reqMenuList,
 } from "../../../util/request";
 import { successAlert, warningAlert } from "../../../util/alert";
 import { mapGetters, mapActions } from "vuex";
@@ -87,6 +92,11 @@ export default {
         url: "",
         status: 1,
       },
+      rules: {
+        title: [{ required: true, message: "请输入账号", trigger: "blur" },
+        { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }],
+        pid: [{ required: true, message: "请选择上级菜单", trigger: "change" }],
+      },
     };
   },
   methods: {
@@ -106,24 +116,36 @@ export default {
         status: 1,
       };
     },
-    add() {
-      reqAddMenu(this.form).then((res) => {
-        // console.log(res.data);
-        if (res.data.code == 200) {
-          successAlert(res.data.msg);
-          this.$emit("hide");
-          this.empty();
-          this.reqList();
+    add(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          reqAddMenu(this.form).then((res) => {
+            if (res.data.code == 200) {
+              successAlert(res.data.msg);
+              this.$emit("hide");
+              this.empty();
+              this.reqList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
-    update() {
-      reqMenuUpdate(this.form).then((res) => {
-        console.log(res);
-      });
-      this.reqList(), this.$emit("hide");
+    update(form) {
+      this.$refs[form].validate((valid) => {
+      if (valid) {
+        reqMenuUpdate(this.form).then((res) => {
+          console.log(res);
+        });
+        this.reqList(), this.$emit("hide");
+      } else {
+        console.log("error submit!!");
+        return false;
+      }
+      })
     },
     look(id) {
       reqMenuDetail({ id: id }).then((res) => {
@@ -131,13 +153,10 @@ export default {
         this.form.id = id;
       });
     },
-    close() {
-    if (!this.info.isAdd) {
-      this.empty();
-    }
+    close(form) {
+      this.empty(this.$refs[form].resetFields());
+    },
   },
-  },
-  
 };
 </script>
 

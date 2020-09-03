@@ -1,8 +1,13 @@
 <template>
   <div>
-    <el-dialog :title="info.title" :visible.sync="info.dialogVisible" width="60%" @closed="close">
-      <el-form :model="form">
-        <el-form-item label="活动名称" :label-width="width">
+    <el-dialog
+      :title="info.title"
+      :visible.sync="info.dialogVisible"
+      width="60%"
+      @closed="close('form')"
+    >
+      <el-form :model="form" :rules="rules" ref="form" status-icon>
+        <el-form-item label="活动名称" :label-width="width" prop="title">
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="活动期限" :label-width="width">
@@ -54,8 +59,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="info.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添 加</el-button>
-        <el-button type="primary" @click="update" v-else>修 改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添 加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修 改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -64,7 +69,7 @@
 import {
   reqseckAdd,
   reqseckDetail,
-  reqspecsUpdate,
+  reqseckUpdate,
 } from "../../../util/request";
 import { successAlert, warningAlert } from "../../../util/alert";
 import { mapGetters, mapActions } from "vuex";
@@ -78,6 +83,10 @@ export default {
   },
   data() {
     return {
+      rules: {
+        title: [{ required: true, message: "请输入活动名称", trigger: "blur" },
+         { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }],
+      },
       timeValue: [],
       //二级分类的列表
       secondCateList: [],
@@ -92,7 +101,7 @@ export default {
         endtime: "",
         first_cateid: null,
         second_cateid: null,
-        goodsid: "",
+        goodsid: null,
         status: 1,
       },
     };
@@ -113,14 +122,17 @@ export default {
       this.form.second_cateid = "";
     },
     changeSecondId() {
-      this.threeList = [];
-      for (let i = 0; i < this.goodsList.length; i++) {
-        if (this.goodsList[i].second_cateid == this.form.second_cateid) {
-          this.threeList.push(this.goodsList[i]);
-        }
-        //因为更换了二级分类，商品重置
-        this.form.goodsid = "";
-      }
+      // this.threeList = [];
+      // for (let i = 0; i < this.goodsList.length; i++) {
+      //   if (this.goodsList[i].second_cateid == this.form.second_cateid) {
+      //     this.threeList.push(this.goodsList[i]);
+      //   }
+      this.threeList = this.goodsList.filter(
+        (item) => item.second_cateid == this.form.second_cateid
+      );
+      //因为更换了二级分类，商品重置
+      this.form.goodsid = "";
+      // }
     },
     //重置form数据
     empty() {
@@ -135,27 +147,33 @@ export default {
         endtime: "",
         first_cateid: null,
         second_cateid: null,
-        goodsid: "",
+        goodsid: null,
         status: 1,
       };
     },
 
     del() {},
-    add() {
-      this.form.begintime = this.timeValue[0];
-      this.form.endtime = this.timeValue[1];
-      reqseckAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          //添加成功
-          successAlert(res.data.msg);
-          //弹框消失
-          this.$emit("hide");
-          //数据重置
-          this.empty();
-          //重新获取list
-          this.reqseckList();
+    add(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          this.form.begintime = this.timeValue[0];
+          this.form.endtime = this.timeValue[1];
+          reqseckAdd(this.form).then((res) => {
+            if (res.data.code == 200) {
+              //添加成功
+              successAlert(res.data.msg);
+              //弹框消失
+              this.$emit("hide");
+              //数据重置
+              this.empty();
+              //重新获取list
+              this.reqseckList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
@@ -172,30 +190,36 @@ export default {
           (item) => item.id == this.form.first_cateid
         ).children;
         //计算商品列表
-        for (let i = 0; i < this.goodsList.length; i++) {
-          if (this.goodsList[i].second_cateid == this.form.second_cateid) {
-            this.threeList.push(this.goodsList[i]);
-          }
-        }
+        this.threeList = this.goodsList.filter(
+          (item) => item.second_cateid == this.form.second_cateid
+        );
       });
     },
     //点击了修改
-    update() {
-      this.form.begintime = this.timeValue[0];
-      this.form.endtime = this.timeValue[1];
-      reqspecsUpdate(this.form).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("更新成功");
-          this.$emit("hide");
-          this.empty();
-          this.reqseckList();
+    update(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          this.form.begintime = this.timeValue[0];
+          this.form.endtime = this.timeValue[1];
+          console.log(this.form);
+          reqseckUpdate(this.form).then((res) => {
+            if (res.data.code == 200) {
+              successAlert("更新成功");
+              this.$emit("hide");
+              this.empty();
+              this.reqseckList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
-    close() {
+    close(form) {
       this.empty();
+      this.$refs[form].resetFields();
     },
   },
   mounted() {

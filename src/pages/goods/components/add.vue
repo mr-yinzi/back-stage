@@ -4,11 +4,11 @@
       :title="info.title"
       :visible.sync="info.dialogVisible"
       width="60%"
-      @closed="close"
+      @closed="close('form')"
       @opened="createEditor"
     >
-      <el-form :model="form">
-        <el-form-item label="一级分类" :label-width="width">
+      <el-form :model="form" :rules="rules" ref="form" status-icon>
+        <el-form-item label="一级分类" :label-width="width" prop="first_cateid">
           <el-select v-model="form.first_cateid" placeholder="请选择" @change="changeFirstId">
             <!-- 少一个动态的数据 -->
             <el-option
@@ -19,7 +19,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="二级分类" :label-width="width">
+        <el-form-item label="二级分类" :label-width="width" prop="second_cateid">
           <el-select v-model="form.second_cateid" placeholder="请选择">
             <!-- 少一个动态的数据 -->
             <el-option
@@ -30,7 +30,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="商品名称" :label-width="width">
+        <el-form-item label="商品名称" :label-width="width" prop="goodsname">
           <el-input v-model="form.goodsname" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="价格" :label-width="width">
@@ -86,8 +86,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="info.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添 加</el-button>
-        <el-button type="primary" @click="update" v-else>修 改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添 加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修 改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -97,7 +97,7 @@
 import {
   reqgoodsAdd,
   reqgoodsDetail,
-  reqgoodsUpdate
+  reqgoodsUpdate,
 } from "../../../util/request";
 import { successAlert, warningAlert } from "../../../util/alert";
 import { mapGetters, mapActions } from "vuex";
@@ -114,6 +114,18 @@ export default {
   },
   data() {
     return {
+      rules: {
+        first_cateid: [
+          { required: true, message: "请选择一级分类", trigger: "blur" },
+        ],
+        second_cateid: [
+          { required: true, message: "请选择二级分类", trigger: "blur" },
+        ],
+        goodsname: [
+          { required: true, message: "请输入商品名称", trigger: "blur" },
+        { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }
+        ],
+      },
       //二级分类的列表
       secondCateList: [],
       //规格属性的列表
@@ -181,22 +193,28 @@ export default {
       //给富文本编辑器赋值
       this.editor.txt.html(this.form.description);
     },
-    add() {
-      //取出富文本编辑器的内容，赋值给form的description
-      this.form.description = this.editor.txt.html();
-      reqgoodsAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          //添加成功
-          successAlert(res.data.msg);
-          //弹框消失
-          this.$emit("hide");
-          //数据重置
-          this.empty();
-          //重新获取list
-          this.reqList();
-          this.reqTotal();
+    add(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          //取出富文本编辑器的内容，赋值给form的description
+          this.form.description = this.editor.txt.html();
+          reqgoodsAdd(this.form).then((res) => {
+            if (res.data.code == 200) {
+              //添加成功
+              successAlert(res.data.msg);
+              //弹框消失
+              this.$emit("hide");
+              //数据重置
+              this.empty();
+              //重新获取list
+              this.reqList();
+              this.reqTotal();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
@@ -218,17 +236,23 @@ export default {
       });
     },
     //点击了修改
-    update() {
-      //取出富文本编辑器的内容，赋值给form的description
-      this.form.description = this.editor.txt.html();
-      reqgoodsUpdate(this.form).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("更新成功");
-          this.$emit("hide");
-          this.empty();
-          this.reqList();
+    update(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          //取出富文本编辑器的内容，赋值给form的description
+          this.form.description = this.editor.txt.html();
+          reqgoodsUpdate(this.form).then((res) => {
+            if (res.data.code == 200) {
+              successAlert("更新成功");
+              this.$emit("hide");
+              this.empty();
+              this.reqList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
@@ -255,8 +279,9 @@ export default {
       this.imgUrl = URL.createObjectURL(file);
       this.form.img = file;
     },
-    close() {
+    close(form) {
       this.empty();
+      this.$refs[form].resetFields();
     },
   },
   mounted() {
@@ -264,9 +289,7 @@ export default {
     if (this.cateList.length == 0) {
       this.reqCateList();
     }
-    if (this.specList.length == 0) {
-      this.reqSpecList(true);
-    }
+    this.reqSpecList(true);
   },
 };
 </script>

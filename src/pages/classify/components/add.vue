@@ -1,15 +1,20 @@
 <template>
   <div class="box">
-    <el-dialog :title="info.title" :visible.sync="info.dialogVisible" width="60%" @closed="close">
-      <el-form :model="form">
-        <el-form-item label="上级菜单" :label-width="width">
-          <el-select v-model="form.pid" placeholder="请选择活动区域">
-            <el-option label="顶级菜单" :value="0"></el-option>
+    <el-dialog
+      :title="info.title"
+      :visible.sync="info.dialogVisible"
+      width="60%"
+      @closed="close('form')"
+    >
+      <el-form :model="form" :rules="rules" ref="form" status-icon>
+        <el-form-item label="上级分类" :label-width="width" prop="pid">
+          <el-select v-model="form.pid" placeholder="请选择">
+            <el-option label="顶级分类" :value="0"></el-option>
             <!-- 少一个动态的数据 -->
-             <el-option v-for="item in list" :key="item.id" :label="item.catename" :value="item.id"></el-option>
+            <el-option v-for="item in list" :key="item.id" :label="item.catename" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="分类名称" :label-width="width">
+        <el-form-item label="分类名称" :label-width="width" prop="catename">
           <el-input v-model="form.catename" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="图片" :label-width="width" v-if="form.pid!=0">
@@ -30,8 +35,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="info.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isAdd">添 加</el-button>
-        <el-button type="primary" @click="update" v-else>修 改</el-button>
+        <el-button type="primary" @click="add('form')" v-if="info.isAdd">添 加</el-button>
+        <el-button type="primary" @click="update('form')" v-else>修 改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -54,6 +59,13 @@ export default {
   },
   data() {
     return {
+      rules: {
+        pid: [{ required: true, message: "请选择上级分类", trigger: "blur" }],
+        catename: [
+          { required: true, message: "请输入分类名称", trigger: "blur" },
+        { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }
+        ],
+      },
       imgUrl: "",
       //label占的宽度
       width: "100px",
@@ -82,19 +94,25 @@ export default {
       };
       this.imgUrl = "";
     },
-    add() {
-      reqCateAdd(this.form).then((res) => {
-        if (res.data.code == 200) {
-          //添加成功
-          successAlert(res.data.msg);
-          //弹框消失
-          this.$emit("hide");
-          //数据重置
-          this.empty();
-          //重新获取list
-          this.reqList();
+    add(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          reqCateAdd(this.form).then((res) => {
+            if (res.data.code == 200) {
+              //添加成功
+              successAlert(res.data.msg);
+              //弹框消失
+              this.$emit("hide");
+              //数据重置
+              this.empty();
+              //重新获取list
+              this.reqList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
@@ -107,15 +125,21 @@ export default {
       });
     },
     //点击了修改
-    update() {
-      reqCateUpdate(this.form).then((res) => {
-        if (res.data.code == 200) {
-          successAlert("更新成功");
-          this.$emit("hide");
-          this.empty();
-          this.reqList();
+    update(form) {
+      this.$refs[form].validate((valid) => {
+        if (valid) {
+          reqCateUpdate(this.form).then((res) => {
+            if (res.data.code == 200) {
+              successAlert("更新成功");
+              this.$emit("hide");
+              this.empty();
+              this.reqList();
+            } else {
+              warningAlert(res.data.msg);
+            }
+          });
         } else {
-          warningAlert(res.data.msg);
+          return false;
         }
       });
     },
@@ -124,9 +148,10 @@ export default {
       this.imgUrl = URL.createObjectURL(file);
       this.form.img = file;
     },
-    close(){
+    close(form) {
       this.empty();
-    }
+      this.$refs[form].resetFields();
+    },
   },
 };
 </script>
