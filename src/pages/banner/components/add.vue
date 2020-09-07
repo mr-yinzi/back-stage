@@ -2,10 +2,10 @@
   <div>
     <el-dialog :title="info.title" :visible.sync="info.dialogVisible" width="60%" @closed="close('form')">
       <el-form :model="form" :rules="rules" ref="form" status-icon>
-        <el-form-item label="标题" :label-width="width" prop="name">
+        <el-form-item label="标题" :label-width="width" prop="title">
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="图片" :label-width="width">
+        <el-form-item label="图片" :label-width="width" prop="img">
           <el-upload
             class="avatar-uploader"
             action="#"
@@ -48,9 +48,12 @@ export default {
   data() {
     return {
       rules: {
-        name: [
+        title: [
           { required: true, message: "请输入标题", trigger: "blur" },
         { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }
+        ],
+         img: [
+          { required: true, message: "请选择图片", trigger: "blur" },
         ],
       },
       imgUrl: "",

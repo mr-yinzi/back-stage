@@ -21,8 +21,8 @@
           <el-radio v-model="form.type" :label="1" disabled>目录</el-radio>
           <el-radio v-model="form.type" :label="2" disabled>菜单</el-radio>
         </el-form-item>
-        <el-form-item label="菜单图标" :label-width="width" v-if="form.type==1">
-          <el-select v-model="form.icon" placeholder="请选择目录图标">
+        <el-form-item label="菜单图标" :label-width="width" v-if="form.type==1" prop="icon">
+          <el-select v-model="form.icon" placeholder="请选择目录图标" >
             <el-option value="el-icon-setting">
               <i class="el-icon-setting"></i>
             </el-option>
@@ -37,7 +37,7 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="菜单地址" :label-width="width" v-else>
+        <el-form-item label="菜单地址" :label-width="width" v-else prop="url">
           <el-select v-model="form.url">
             <el-option value label="--请选择--" disabled></el-option>
             <el-option
@@ -96,6 +96,8 @@ export default {
         title: [{ required: true, message: "请输入账号", trigger: "blur" },
         { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }],
         pid: [{ required: true, message: "请选择上级菜单", trigger: "change" }],
+        icon: [{ required: true, message: "请选择上级菜单", trigger: "change" }],
+        url: [{ required: true, message: "请选择上级菜单", trigger: "change" }],
       },
     };
   },

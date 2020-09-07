@@ -15,6 +15,7 @@
           :label-width="width"
           v-for="(item,index) in attrArr"
           :key="index"
+          prop="attrs"
         >
           <el-row>
             <el-col :span="18">
@@ -54,11 +55,32 @@ export default {
     }),
   },
   data() {
+    var validateAttrs = (rule, value, callback) => {
+      this.form.attrs = JSON.stringify(this.attrArr.map((item) => item.value));
+      console.log(this.form.attrs);
+      if (this.form.attrs === '[""]') {
+        callback(new Error("请输入商品规格"));
+      } else {
+        callback();
+      }
+    };
     return {
       rules: {
         specsname: [
           { required: true, message: "请输入规格名称", trigger: "blur" },
-        { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }
+          {
+            min: 2,
+            max: 16,
+            message: "长度在 2 到 16 个字符",
+            trigger: "blur",
+          },
+        ],
+        attrs: [
+          {
+            required: true,
+            validator: validateAttrs,
+            trigger: "blur",
+          },
         ],
       },
       attrArr: [

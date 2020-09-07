@@ -10,7 +10,7 @@
         <el-form-item label="活动名称" :label-width="width" prop="title">
           <el-input v-model="form.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="活动期限" :label-width="width">
+        <el-form-item label="活动期限" :label-width="width" prop="endtime">
           <el-date-picker
             v-model="timeValue"
             type="daterange"
@@ -20,7 +20,7 @@
             value-format="timestamp"
           ></el-date-picker>
         </el-form-item>
-        <el-form-item label="一级分类" :label-width="width">
+        <el-form-item label="一级分类" :label-width="width" prop="first_cateid">
           <el-select v-model="form.first_cateid" placeholder="请选择" @change="changeFirstId">
             <!-- 少一个动态的数据 -->
             <el-option
@@ -31,7 +31,7 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="二级分类" :label-width="width">
+        <el-form-item label="二级分类" :label-width="width" prop="second_cateid">
           <el-select v-model="form.second_cateid" placeholder="请选择" @change="changeSecondId">
             <!-- 少一个动态的数据 -->
             <el-option
@@ -42,9 +42,8 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="商品" :label-width="width">
+        <el-form-item label="商品" :label-width="width" prop="goodsid">
           <el-select v-model="form.goodsid" placeholder="请选择">
-            <!-- 少一个动态的数据 -->
             <el-option
               v-for="item in threeList"
               :key="item.id"
@@ -82,10 +81,40 @@ export default {
     }),
   },
   data() {
+      var validateEndtime = (rule, value, callback) => {
+          this.form.endtime = this.timeValue[1];
+          console.log(this.form.endtime);
+      if (this.form.endtime === undefined) {
+        callback(new Error("请选择活动时间"));
+      } else {
+        callback();
+      }
+    };
     return {
       rules: {
-        title: [{ required: true, message: "请输入活动名称", trigger: "blur" },
-         { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }],
+        title: [
+          { required: true, message: "请输入活动名称", trigger: "blur" },
+          {
+            min: 2,
+            max: 16,
+            message: "长度在 2 到 16 个字符",
+            trigger: "blur",
+          },
+        ],
+        first_cateid: [
+          { required: true, message: "请选择一级分类", trigger: "blur" },
+        ],
+        second_cateid: [
+          { required: true, message: "请选择二级分类", trigger: "blur" },
+        ],
+        goodsid: [{ required: true, message: "请选择商品", trigger: "blur" }],
+        endtime: [
+          {
+            required: true,
+            validator: validateEndtime,
+            trigger: "blur",
+          },
+        ],
       },
       timeValue: [],
       //二级分类的列表

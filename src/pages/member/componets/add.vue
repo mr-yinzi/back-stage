@@ -43,7 +43,6 @@ export default {
         ],
         phone: [
           { required: true, message: "请输入手机号", trigger: "blur" },
-          { type: "number", message: "手机号必须为数字值" },
         ],
         password: [
           { required: true, message: "请输入密码", trigger: "blur" },

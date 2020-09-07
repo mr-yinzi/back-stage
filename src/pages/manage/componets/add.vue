@@ -4,7 +4,6 @@
       <el-form :model="form" :rules="rules" ref="form" status-icon>
         <el-form-item label="所属角色" :label-width="width" prop="roleid">
           <el-select v-model="form.roleid" placeholder="请选择角色">
-            <el-option label="----请选择----" :value="0" disabled></el-option>
             <el-option v-for="item in list" :key="item.id" :label="item.rolename" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
@@ -53,7 +52,7 @@ export default {
       },
       width: "100px",
       form: {
-        roleid: 0,
+        roleid: null,
         username: "",
         password: "",
         status: 1,
@@ -71,7 +70,7 @@ export default {
     },
     empty() {
       this.form = {
-        roleid: 0,
+        roleid: null,
         username: "",
         password: "",
         status: 1,

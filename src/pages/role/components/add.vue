@@ -5,7 +5,7 @@
         <el-form-item label="角色名称" :label-width="width" prop="rolename">
           <el-input v-model="form.rolename" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色权限" :label-width="width">
+        <el-form-item label="角色权限" :label-width="width" prop="menus">
           <el-tree
             :data="menuList"
             show-checkbox
@@ -43,11 +43,31 @@ export default {
     }),
   },
   data() {
+    var validateMenu = (rule, value, callback) => {
+      this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
+      if (this.form.menus === '[]') {
+        callback(new Error("请至少选择一项角色权限"));
+      } else {
+        callback();
+      }
+    };
     return {
       rules: {
         rolename: [
           { required: true, message: "请输入角色名称", trigger: "blur" },
-        { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' },
+          {
+            min: 2,
+            max: 16,
+            message: "长度在 2 到 16 个字符",
+            trigger: "blur",
+          },
+        ],
+        menus: [
+          {
+            required: true,
+            validator: validateMenu,
+            trigger: "blur",
+          },
         ],
       },
       width: "100px",
@@ -110,6 +130,7 @@ export default {
     update(form) {
       this.$refs[form].validate((valid) => {
         if (valid) {
+          this.form.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
           reqRoleUpdate(this.form).then((res) => {
             this.cancel();
             this.reqRoleList();

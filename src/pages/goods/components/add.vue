@@ -33,13 +33,13 @@
         <el-form-item label="商品名称" :label-width="width" prop="goodsname">
           <el-input v-model="form.goodsname" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="价格" :label-width="width">
+        <el-form-item label="价格" :label-width="width" prop="price">
           <el-input v-model="form.price" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="市场价格" :label-width="width">
+        <el-form-item label="市场价格" :label-width="width" prop="market_price">
           <el-input v-model="form.market_price" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="图片" :label-width="width" v-if="form.pid!=0">
+        <el-form-item label="图片" :label-width="width" v-if="form.pid!=0" prop="img">
           <el-upload
             class="avatar-uploader"
             action="#"
@@ -50,7 +50,7 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
-        <el-form-item label="商品规格" :label-width="width">
+        <el-form-item label="商品规格" :label-width="width"  prop="specsid">
           <el-select v-model="form.specsid" placeholder="请选择" @change="changeSpecId">
             <!-- 少一个动态的数据 -->
             <el-option
@@ -62,7 +62,7 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="商品属性" :label-width="width">
+        <el-form-item label="商品属性" :label-width="width"  prop="specsattr">
           <el-select v-model="form.specsattr" placeholder="请选择" multiple>
             <!-- 少一个动态的数据 -->
             <el-option v-for="item in attrList" :key="item" :label="item" :value="item"></el-option>
@@ -124,6 +124,21 @@ export default {
         goodsname: [
           { required: true, message: "请输入商品名称", trigger: "blur" },
         { min: 2, max: 16, message: '长度在 2 到 16 个字符', trigger: 'blur' }
+        ],
+         price: [
+          { required: true, message: "请输入价格", trigger: "blur" },
+        ],
+         market_price: [
+          { required: true, message: "请输入市场价格", trigger: "blur" },
+        ],
+         specsid: [
+          { required: true, message: "请选择二级分类", trigger: "blur" },
+        ],
+         specsattr: [
+          { required: true, message: "请选择二级分类", trigger: "blur" },
+        ],
+         img: [
+          { required: true, message: "请选择图片", trigger: "blur" },
         ],
       },
       //二级分类的列表
